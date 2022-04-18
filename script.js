@@ -8,39 +8,39 @@ var continueGame = 1;
 document.getElementById("numberOfFlags").textContent = "🚩" + flags;
 
 function generateTable() {
-    for (let cnt = 0; cnt < 10; ++cnt) {
-        let row = tbl.insertRow(cnt);
-        for (let count = 0; count < 10; ++count) {
-            var cell = row.insertCell(count);
+    for (let line = 0; line < 10; ++line) {
+        let row = tbl.insertRow(line);
+        for (let column = 0; column < 10; ++column) {
+            var cell = row.insertCell(column);
             cell.width = 75;
             cell.height = 75;
             cell.style.borderWidth = "3px";
-            if (cnt % 2 == 0 && count % 2 == 0) {
+            if (line % 2 == 0 && column % 2 == 0) {
                 cell.style.backgroundColor = "#7CFC00";
-            } else if (cnt % 2 == 1 && count % 2 == 0) {
+            } else if (line % 2 == 1 && column % 2 == 0) {
                 cell.style.backgroundColor = "green";
-            } else if (cnt % 2 == 0 && count % 2 == 1) {
+            } else if (line % 2 == 0 && column % 2 == 1) {
                 cell.style.backgroundColor = "green";
-            } else if (cnt % 2 == 1 && count % 2 == 1) {
+            } else if (line % 2 == 1 && column % 2 == 1) {
                 cell.style.backgroundColor = "#7CFC00";
             }
-            tbl.rows[cnt].cells[count].setAttribute("visited", "false");
+            tbl.rows[line].cells[column].setAttribute("visited", "false");
 
             cell.onclick =
                 function() {
-                    game(cnt, count);
+                    checkLose(line, column);
                 };
-            tbl.rows[cnt].cells[count].addEventListener('contextmenu', function(ev) {
+            tbl.rows[line].cells[column].addEventListener('contextmenu', function(ev) {
                 ev.preventDefault();
                 if (flags > 0) {
-                    if (tbl.rows[cnt].cells[count].textContent === "") {
-                        tbl.rows[cnt].cells[count].setAttribute("flag", "true");
-                        tbl.rows[cnt].cells[count].textContent = "🚩";
+                    if (tbl.rows[line].cells[column].textContent === "") {
+                        tbl.rows[line].cells[column].setAttribute("flag", "true");
+                        tbl.rows[line].cells[column].textContent = "🚩";
                         --flags;
                         document.getElementById("numberOfFlags").textContent = "🚩 " + flags;
-                    } else if (tbl.rows[cnt].cells[count].textContent === "🚩") {
-                        tbl.rows[cnt].cells[count].setAttribute("flag", "false");
-                        tbl.rows[cnt].cells[count].textContent = "";
+                    } else if (tbl.rows[line].cells[column].textContent === "🚩") {
+                        tbl.rows[line].cells[column].setAttribute("flag", "false");
+                        tbl.rows[line].cells[column].textContent = "";
                         ++flags
                         document.getElementById("numberOfFlags").textContent = "🚩 " + flags;
                     }
@@ -62,7 +62,7 @@ function generatesBombPositions() {
             y = Math.floor((Math.random() * 9));
         }
         tbl.rows[x].cells[y].setAttribute("bomb", "true");
-        // tbl.rows[x].cells[y].textContent = "💣";
+
     }
     for (let row = 0; row < 10; ++row) {
         for (let col = 0; col < 10; ++col) {
@@ -73,8 +73,7 @@ function generatesBombPositions() {
     }
 }
 
-function lose(x, y) {
-    let ok = 0;
+function checkLose(x, y) {
     let value = tbl.rows[x].cells[y];
     if (value.getAttribute("bomb") === "true") {
         let winText = document.getElementById("win");
@@ -83,16 +82,16 @@ function lose(x, y) {
             for (let col = 0; col < 10; ++col) {
                 if (tbl.rows[row].cells[col].getAttribute("bomb") === "true") {
                     tbl.rows[row].cells[col].textContent = "💣";
-                    ok = 1;
                 }
             }
         }
 
+    } else if (value.getAttribute("bomb") === "false") {
+        game(x, y);
     }
-    return ok;
 }
 
-function howMannyBombs(x, y) {
+function bombsNumber(x, y) {
     var bombs = 0;
     for (let cnt = 0; cnt < 8; ++cnt) {
         if (x + changeOfPlaceVertical[cnt] >= 0 && x + changeOfPlaceVertical[cnt] < 10 && y + changeOfPlaceHorizontal[cnt] >= 0 && y + changeOfPlaceHorizontal[cnt] < 10) {
@@ -119,14 +118,7 @@ function checkWin() {
 
 function game(x, y) {
     tbl.rows[x].cells[y].setAttribute("visited", "true");
-    if (checkWin() == 1) {
-        document.getElementById("win").textContent = "YOU WIN";
-        return false;
-    }
-    if (lose(x, y) == 1) {
-        return false;
-    }
-    let numberBombs = howMannyBombs(x, y);
+    let numberBombs = bombsNumber(x, y);
     if (numberBombs != 0) {
         tbl.rows[x].cells[y].textContent = numberBombs;
         tbl.rows[x].cells[y].style.backgroundColor = "white";
@@ -138,9 +130,6 @@ function game(x, y) {
                     if (tbl.rows[x + changeOfPlaceVertical[cnt]].cells[y + changeOfPlaceHorizontal[cnt]].getAttribute("bomb") !== "true") {
                         tbl.rows[x + changeOfPlaceVertical[cnt]].cells[y + changeOfPlaceHorizontal[cnt]].style.backgroundColor = "white";
                         game(x + changeOfPlaceVertical[cnt], y + changeOfPlaceHorizontal[cnt]);
-                        if (checkWin() == 1) {
-                            document.getElementById("win").textContent = "YOU WIN";
-                        }
                     }
                 }
             }
